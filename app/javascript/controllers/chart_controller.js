@@ -68,7 +68,7 @@ export default class extends Controller {
                     dataPointMouseEnter: function(event, chartContext, config) {
                         //console.log("dataPointEnter: ", event, chartContext, config)
                         // ...
-                    }
+                    },
                     dataPointMouseLeave: function(event, chartContext, config) {
                         //console.log("dataPointLeave: ", event, chartContext, config)
                         // ...
