@@ -24,6 +24,7 @@
 /tmp/storage/*
 !/tmp/storage/
 !/tmp/storage/.keep
+!/storage/aws_test_data_for_aapl.json
 
 /public/assets
 
