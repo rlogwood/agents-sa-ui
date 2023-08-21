@@ -16,7 +16,7 @@ class SiteController < ApplicationController
         region: 'US'
       },
       headers: {
-        'X-RapidAPI-Key': 'e72b21ebb6msh76e02f4f493afeap1f03dajsn619f6e985aec',
+        'X-RapidAPI-Key': ENV['RAPID_API_KEY'],
         'X-RapidAPI-Host': 'apidojo-yahoo-finance-v1.p.rapidapi.com'
       })
 
@@ -106,7 +106,8 @@ class SiteController < ApplicationController
   end
 
   def get_aws_test_data
-    filename = "storage/aws_test_data_for_aapl.json"
+    #filename = "storage/aws_test_data_for_aapl.json"
+    filename = "public/aws_test_data_for_aapl.json"
     File.open(filename, "r") do |f|
       data = f.read
       # data_hash = JSON.parse(data)
@@ -243,7 +244,7 @@ class SiteController < ApplicationController
     #puts date_time_string
     #puts utc_date_time_string
 
-    let pointIndex = 0
+    point_index = 0
     data['stock_data'].each { |row|
       (price_data, volume_data) = aws_row_to_apexchart_row(row)
       #ruby_time = ruby_time_from_unix_time(row['Date']/1000)
@@ -256,11 +257,11 @@ class SiteController < ApplicationController
       date = time_obj.strftime('%Y-%m-%d')
       #time = Time.at(row['Date']/1000).to_datetime
       #date = time.strftime('%Y-%m-%d')
-      @pricing_by_date[date] = {'close':row['Close'], 'date':row['Date'], 'dataPointIndex':pointIndex}
+      @pricing_by_date[date] = {'close':row['Close'], 'date':row['Date'], 'dataPointIndex':point_index}
       #DateTime.strptime(price_data['data'],'%s')
       @price_data.push(price_data)
       @volume_data.push(volume_data)
-      pointIndex += 1
+      point_index += 1
       # return if @stock_data.length > 5
       # 2023-08-04
       # %Y-%m-%d
