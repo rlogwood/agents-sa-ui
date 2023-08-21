@@ -1,5 +1,14 @@
 <%#= turbo_page_requires_reload %>
 <%#= turbo_frame_tag 'analyze_form' do %>
+
+<div class="m-10 text-lg">
+  <% flash.each do |type, msg| %>
+    <div class="text-lg font-bold bg-pink-300">
+      <%= msg %>
+    </div>
+  <% end %>
+</div>
+
 <div class="flex m-3">
 
   <%= render "site/stock_form" %>
@@ -8,17 +17,19 @@
        data-chart-prices-value=<%= @price_data.to_json %>
          data-chart-volume-value=<%= @volume_data.to_json %>
        data-chart-points-value=<%= @points_data.to_json %>
-         class="inline">
+         data-chart-future-value=<%= @future_sentiment.as_json %>
+       data-chart-sentiment-value=<%= @sentiment.as_json %>
+
+       class="inline">
 
     <button data-action="click->chart#show" class="ml-2 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
       Chart It!
     </button>
 
+    <div data-chart-target="sentiment" class="grid box-border shadow bg-amber-100 m-4 p-2">
+    </div>
+
   </div>
-</div>
-<div class="grid box-border shadow bg-amber-100 m-4 p-2">
-  Apple's earnings beat soft expectations on both profit and revenue, but overall sales declined 1% as iPhone, iPad and
-  Mac sales
 </div>
 
 

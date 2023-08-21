@@ -9,11 +9,13 @@ function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 export default class extends Controller {
-    //static targets = [ "output"]
+    static targets = [ "sentiment"]
     static values = {
         prices: String,
         volume: String,
         points: String,
+        future: String,
+        sentiment: String,
     }
 
     connect() {
@@ -22,8 +24,18 @@ export default class extends Controller {
         this.price_data = JSON.parse(this.pricesValue)
         this.volume_data = JSON.parse(this.volumeValue)
         this.points_data = JSON.parse(this.pointsValue)
+        //this.future_sentiment = JSON.parse(this.futureValue)
+        //this.sentiment_data = JSON.parse(this.sentimentValue)
+        console.log("futureValue: ", this.futureValue)
+        console.log("sentimentValue: ", this.sentimentValue)
         console.log("price_data:", this.price_data)
         console.log("volume_data:", this.volume_data)
+        console.log("points_data:", this.points_data)
+        //console.log("future_sentiment:", this.future_sentiment)
+        //console.log("sentiment_data:", this.sentiment_data)
+        const sentiment = this.sentimentTarget
+        sentiment.className = "hidden"
+        sentiment.innerHTML = "" // "this is the sentiment" //this.sentimentValue
 
         this.closing_prices = []
         this.price_dates = []

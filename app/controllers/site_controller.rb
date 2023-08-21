@@ -4,8 +4,9 @@ require 'uri'
 
 class SiteController < ApplicationController
   include SiteHelper
-  SENTIMENT_ANALYSIS_URL = 'https://f4kzgs4vyb.execute-api.us-east-2.amazonaws.com/default/Agent'
-
+  #SENTIMENT_ANALYSIS_URL = 'https://f4kzgs4vyb.execute-api.us-east-2.amazonaws.com/default/Agent'
+  #response=requests.post('https://sj5d8cge8f.execute-api.us-east-2.amazonaws.com/default/agent',data=payload,headers=headers)
+  SENTIMENT_ANALYSIS_URL = 'https://sj5d8cge8f.execute-api.us-east-2.amazonaws.com/default/agent'
   private
 
   def get_stock_history(symbol)
@@ -25,6 +26,31 @@ class SiteController < ApplicationController
 
     JSON.parse(response.body)
   end
+
+  def get_stock_sentiment(symbol)
+    body = {
+      "key1": "#{symbol}"
+    }
+    puts("body:#{body}")
+    puts("body:#{body.to_json}")
+
+    response = Excon.post(
+      SENTIMENT_ANALYSIS_URL,
+      query: {
+        symbol: "#{symbol}",
+        region: 'US'
+      },
+      body: body.to_json,
+      headers: {
+        'Content-Type': 'application/json',
+      })
+
+    puts("response:#{response.inspect}")
+    return nil if response.status != 200
+
+    JSON.parse(response.body)
+  end
+
 
   def request_api(url)
     response = Excon.get(
@@ -132,12 +158,16 @@ class SiteController < ApplicationController
   def sentiment_points(sentiment_dates)
     return [] if sentiment_dates.nil?
 
+    sentiment = {}
     points_data = []
     sentiment_dates.each { |row|
-      point = sentiment_point(row)
+      (point, data_point_index) = sentiment_point(row)
       points_data.push(point) unless point.nil?
+
+      sentiment[data_point_index] = row['Related_Data']
+
     }
-    points_data
+    [points_data, sentiment]
   end
 
   def sentiment_point(row)
@@ -147,12 +177,13 @@ class SiteController < ApplicationController
 
     price_date = pricing_data[:date]
     price = pricing_data[:close]
+    data_point_index = pricing_data[:data_point_index]
 
     case row['Sentiment']
     when 'positive'
-      positive_marker(price_date, price)
+      [positive_marker(price_date, price), data_point_index]
     when 'negative'
-      negative_marker(price_date, price)
+      [negative_marker(price_date, price), data_point_index]
     else
       #add_neutral_marker(price_date, price)
       # do nothing
@@ -216,64 +247,39 @@ class SiteController < ApplicationController
     @price_data = []
     @volume_data = []
     @pricing_by_date = {}
-
-    #orig_unix_timestamp = 1691107200000
-    #unix_timestamp = orig_unix_timestamp / 1000
-
-
-    #unix_timestamp = 1691107200
-    #unix_timestamp = 1616412692
-
-    #datetime = "2021-01-14 05:30"
-
-
-    #=> Thu, 14 Jan 2021 05:30:00 EST -05:00
-
-    #datetime_in_ET.in_time_zone("Australia/Melbourne")
-    # => Thu, 14 Jan 2021 21:30:00 AEDT +11:00
-    # Convert the Unix timestamp to a Time object
-    #time_obj = Time.at(unix_timestamp)
-    #time_obj = Time.at(unix_timestamp).in_time_zone('UTC') # Adjust the time zone as needed
-    #date_time_string = time_obj.strftime('%Y-%m-%d %H:%M:%S')
-    #datetime_in_UTC = ActiveSupport::TimeZone['Etc/UTC'].parse(date_time_string)
-
-    # Format the Time object as a string
-    #date_time_string = time_obj.strftime('%Y-%m-%d %H:%M:%S')
-    #utc_date_time_string = datetime_in_UTC.strftime('%Y-%m-%d %H:%M:%S')
-
-    #puts date_time_string
-    #puts utc_date_time_string
-
+    @sentiment = {}
+    @future_sentiment[:sentiment] = future_sentiment(data)
+    puts("@future_sentiment #{@future_sentiment}")
     point_index = 0
     data['stock_data'].each { |row|
       (price_data, volume_data) = aws_row_to_apexchart_row(row)
-      #ruby_time = ruby_time_from_unix_time(row['Date']/1000)
       unix_timestamp = row['Date']/1000
       time_obj = Time.at(unix_timestamp).in_time_zone('UTC') # Adjust the time zone as needed
-      #epoch_date = (row['Date']/1000).to_s
-      #epoch_date_str = DateTime.strptime(epoch_date,'%s')
-      #date = epoch_date_str.strftime('%Y-%m-%d')
-      #date = ruby_time.strftime('%Y-%m-%d')
       date = time_obj.strftime('%Y-%m-%d')
-      #time = Time.at(row['Date']/1000).to_datetime
-      #date = time.strftime('%Y-%m-%d')
-      @pricing_by_date[date] = {'close':row['Close'], 'date':row['Date'], 'dataPointIndex':point_index}
-      #DateTime.strptime(price_data['data'],'%s')
+      @pricing_by_date[date] = {'close':row['Close'], 'date':row['Date'], 'data_point_index':point_index}
+      #@sentiment[point_index] = {'sentiment':row['Sentiment'], 'description':row['R'] 'date':row['Date']}
       @price_data.push(price_data)
       @volume_data.push(volume_data)
       point_index += 1
-      # return if @stock_data.length > 5
-      # 2023-08-04
-      # %Y-%m-%d
     }
-    puts @pricing_by_date
-    @points_data = sentiment_points(data['Sentiment_dates'])
-    puts @points_data
+    puts("@pricing_by_date #{@pricing_by_date}")
+    (@points_data, @sentiment) = sentiment_points(data['Sentiment_dates'])
+    puts("@points_data #{@points_data}")
+    puts(" @sentiment #{@sentiment}")
   end
 
 
   def get_test_stock_data(symbol)
     data = retrieve_stock_data(symbol)
+  end
+
+
+  def future_sentiment(data)
+    "As of #{data['Future_Date_data'][0]['Date']} #{data['Future_Date_data'][0]['Related_data']}"
+    #sentiment is #{data['Future_Date_data'][0]['Sentiment']} #
+    # "Future_Date_data": [{"Date": "2023-08-20",
+    #                       "Sentiment": "The sentiment of the given text is positive.",
+    #                       "Related_data": "The current public sentiment for stock ticker name AAPL is positive. The reason behind this positive sentiment is that the company is generating a significant amount of free cash flow each quarter and has the financial strength to engage in stock buybacks. Additionally, the upcoming iPhone 15 launch and other innovations are expected to drive demand."}]}
   end
 
   public
@@ -286,6 +292,8 @@ class SiteController < ApplicationController
     @volume_data = []
     @pricing_by_date = {}
     @points_data = []
+    @sentiment = {}
+    @future_sentiment = {}
   end
 
   def index
@@ -299,28 +307,25 @@ class SiteController < ApplicationController
     @price_data = []
     @volume_data = []
 
-    testing_aws_json = true
+    testing_aws_json = false
 
     if testing_aws_json
       data = get_aws_test_data
       init_apexchart_from_aws(data)
     else
       if stock.present?
-        data = get_stock_history(stock)
-        init_apexchart_from_rapidapi(data)
+        #data = get_stock_history(stock)
+        #init_apexchart_from_rapidapi(data)
+        data = get_stock_sentiment(stock)
+        if data.nil?
+          flash[:notice] = "No data found for #{stock}"
+          redirect_to analyze_path
+          return
+        end
+
+        init_apexchart_from_aws(data)
       end
     end
-    #@stock_data = @stock_data.to_json.to_s
-    @metrics = {
-      labels: ['Red', 'Blue', 'Yellow', 'Green', 'Purple', 'Orange'],
-      datasets: [{
-                   label: '# of Votes',
-                   data: [12, 19, 3, 5, 2, 3],
-                   borderWidth: 1
-                 }]
-    }
-    # puts(@metrics)
-    # puts(@metrics.as_json)
   end
 
   def contact
@@ -334,55 +339,3 @@ class SiteController < ApplicationController
     params.permit(:stock)
   end
 end
-
-=begin
-  # puts("date_value:#{date_value}")
-  #time_value = Time.at(date_value)
-
-
-  # def convert_time(datetime)
-  #   #time = Time.parse(datetime).in_time_zone("Eastern Time (US & Canada)")
-  #   time = Time.parse(datetime)
-  #   time.strftime("%-m/%-d/%y: %H:%M %Z")
-  # end
-
-
-
-  # x: date
-    # y: order: open, high, low, close
-    #             {
-    #                 x: new Date(1538857800000),
-    #                 y: [6593.86, 6604.28, 6586.57, 6600.01]
-    #             },
-
-    # Perhaps the most reliable way is to use seconds since the epoch for ruby, and milliseconds for JavaScript.
-    #
-    # In ruby:
-    #
-    # t = Time.now
-    # => 2014-03-12 11:18:29 -0700
-    # t.to_f * 1000 # convert to milliseconds since 1970-01-01 00:00:00 UTC.
-    # => 1394648309130.185
-    #
-  #end
-
-      #puts("data_hash:#{data_hash}")
-      #puts("convert_time:#{convert_time(data_hash['prices'][0]['date'])}")
-
-      # date_value = data_hash['prices'][0]['date']
-      # puts("date_value:#{date_value}")
-      # #date = Date.jd(date_value)
-      # time_value = Time.at(date_value)
-      # puts("date:#{time_value}")
-      # date_str = time_value.strftime("%-m/%-d/%y: %H:%M %Z")
-      # puts("date_str:#{date_str}")
-
-    # query = BasicYahooFinance::Query.new
-    #@stock_data = query.quotes('AAPL', 'price')
-    # puts(@stock_data)
-    #@stock_data = lookup_stock_data('AAPL')
-
-
-    # puts("stock data:(#{@stock_data})")
-
-=end
