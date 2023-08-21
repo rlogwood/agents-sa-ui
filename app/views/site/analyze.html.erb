@@ -1,2 +1,34 @@
-<h1>Site#analyze</h1>
-<p>Find me in app/views/site/analyze.html.erb</p>
+<%#= turbo_page_requires_reload %>
+<%#= turbo_frame_tag 'analyze_form' do %>
+<div class="flex m-3">
+
+  <%= render "site/stock_form" %>
+
+  <div data-controller="chart"
+       data-chart-prices-value=<%= @price_data.to_json %>
+         data-chart-volume-value=<%= @volume_data.to_json %>
+       data-chart-points-value=<%= @points_data.to_json %>
+         class="inline">
+
+    <button data-action="click->chart#show" class="ml-2 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+      Chart It!
+    </button>
+
+  </div>
+</div>
+<div class="grid box-border shadow bg-amber-100 m-4 p-2">
+  Apple's earnings beat soft expectations on both profit and revenue, but overall sales declined 1% as iPhone, iPad and
+  Mac sales
+</div>
+
+
+<div id="stock-chart" class="bg-gray-50 mt-45 ">
+</div>
+
+<div id="chart-candlestick" class="bg-amber-300" style="<%= @stock_graph_style %>">
+</div>
+
+<div id="chart-bar" class="bg-amber-800" style="<%= @stock_graph_style %>">
+</div>
+
+<%# end %>

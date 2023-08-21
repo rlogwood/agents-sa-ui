@@ -10,7 +10,14 @@
     <%= javascript_include_tag "application", "data-turbo-track": "reload", defer: true %>
   </head>
 
-  <body>
+  <body class="bg-indigo-300">
+    <%= render 'layouts/navbar' %>
     <%= yield %>
+  <div class="bg-yellow-200 text-amber-900 hidden">
+
+  </div>
+  <div class="hover:bg-gray-100 hover:text-blue-600 rounded-md px-3 py-2 text-md font-medium hidden">
+
+  </div>
   </body>
 </html>

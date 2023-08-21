@@ -1,0 +1,14 @@
+<!-- Current: "bg-gray-900 text-white", Default: "text-gray-300 hover:bg-gray-700 hover:text-white" -->
+<%#= link_to 'Dashboard', site_index_path, class: "page-link" %>
+<%= render NavLinkComponent.new('Home', site_index_path) %>
+<%= render NavLinkComponent.new('About', site_analyze_path) %>
+<%= render NavLinkComponent.new('Contact', site_contact_path) %>
+
+
+<%#if user_signed_in? %>
+  <%#= render NavLinkComponent.new('Edit Account', edit_user_registration_path) %>
+  <%#= render NavLinkComponent.new('Logout', destroy_user_session_path, data: { turbo_method: :delete }) %>
+<%# else %>
+  <%#= render NavLinkComponent.new('Login', new_user_session_path) %>
+<% #end %>
+

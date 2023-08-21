@@ -1,0 +1,44 @@
+<h1>Site#analyze</h1>
+<p>Find me in app/views/site/analyze.html.erb</p>
+
+<!--HTML from anywhere-->
+<div data-controller="hello">
+  <input data-hello-target="name" type="text">
+
+  <button data-action="click->hello#greet">
+    Greet
+  </button>
+
+  <span data-hello-target="output">
+  </span>
+</div>
+
+<hr/>
+
+<%# @stock_data.as_json %>
+
+<div data-controller="chart"
+     data-chart-prices-value=<%= @price_data.to_json %>
+       data-chart-volume-value=<%= @volume_data.to_json %>>
+
+  <input data-chart-target="stock" type="text">
+
+  <button data-action="click->chart#show" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+    chart it
+  </button>
+
+  <span data-chart-target="output">
+  </span>
+</div>
+
+<div id="stock-chart" class="bg-amber-300 mt-45 " >
+</div>
+
+<div id="chart-candlestick" class="bg-amber-300" style="<%= @stock_graph_style %>">
+</div>
+
+<div id="chart-bar" class="bg-amber-800" style="<%= @stock_graph_style %>">
+</div>
+
+
+<hr/>

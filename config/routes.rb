@@ -2,7 +2,6 @@ Rails.application.routes.draw do
   get 'contact', to: 'site#contact'
   get 'analyze', to: 'site#analyze'
   get 'home', to: 'site#index'
-  get 'home',  to: 'site#index'
   root to: 'site#index'
   get 'site/index'
   get 'site/analyze'

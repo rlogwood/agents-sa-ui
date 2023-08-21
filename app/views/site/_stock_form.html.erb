@@ -1,0 +1,5 @@
+<%= form_with url: site_analyze_path, method: :get do |form| %>
+  <%= form.label :stock, "Stock Symbol:" %>
+  <%= form.text_field :stock %>
+  <%= form.submit "Analyze", class: "bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"  %>
+<% end %>

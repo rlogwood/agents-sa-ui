@@ -73,9 +73,14 @@ end
 
 group :development, :test do
   gem "rspec-rails"
-  gem "better_errors", git: "https://github.com/rlogwood/better_errors_ai_assist.git", branch: "ai_assist"
+  #gem "better_errors", git: "https://github.com/rlogwood/better_errors_ai_assist.git", branch: "ai_assist"
+  gem "better_errors", path: "/home/dever/Dropbox/dev/repos/better_errors_ai_assist"
   gem "binding_of_caller"
   gem "sassc"
 end
 gem "view_component"
 gem "csv"
+
+gem "basic_yahoo_finance", "~> 0.5.1"
+
+gem "excon", "~> 0.100.0"
