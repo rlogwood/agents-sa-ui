@@ -4,6 +4,8 @@ require 'uri'
 
 class SiteController < ApplicationController
   include SiteHelper
+  include SentimentPointsHelper
+
   #SENTIMENT_ANALYSIS_URL = 'https://f4kzgs4vyb.execute-api.us-east-2.amazonaws.com/default/Agent'
   #response=requests.post('https://sj5d8cge8f.execute-api.us-east-2.amazonaws.com/default/agent',data=payload,headers=headers)
   SENTIMENT_ANALYSIS_URL = 'https://sj5d8cge8f.execute-api.us-east-2.amazonaws.com/default/agent'
@@ -155,82 +157,6 @@ class SiteController < ApplicationController
   #               cssClass: 'apexcharts-custom-class'
 
 
-  def sentiment_points(sentiment_dates)
-    return [] if sentiment_dates.nil?
-
-    sentiment = {}
-    points_data = []
-    sentiment_dates.each { |row|
-      (point, data_point_index) = sentiment_point(row)
-      points_data.push(point) unless point.nil?
-
-      sentiment[data_point_index] = row['Related_Data']
-
-    }
-    [points_data, sentiment]
-  end
-
-  def sentiment_point(row)
-    sentiment_date = row['Date']
-    pricing_data = @pricing_by_date[sentiment_date]
-    return if pricing_data.nil?
-
-    price_date = pricing_data[:date]
-    price = pricing_data[:close]
-    data_point_index = pricing_data[:data_point_index]
-
-    case row['Sentiment']
-    when 'positive'
-      [positive_marker(price_date, price), data_point_index]
-    when 'negative'
-      [negative_marker(price_date, price), data_point_index]
-    else
-      #add_neutral_marker(price_date, price)
-      # do nothing
-    end
-  end
-
-  def neutral_marker(x, y)
-    {
-      x: x,
-      y: y,
-      marker: {
-        size: 8,
-        fillColor: '#FFFFFF',
-        strokeColor: '#000000',
-        radius: 2,
-        cssClass: 'apexcharts-custom-class'
-      }
-    }
-  end
-
-  def negative_marker(x, y)
-    {
-      x: x,
-      y: y,
-      marker: {
-        size: 8,
-        fillColor: '#FF0000',
-        strokeColor: '#000000',
-        radius: 2,
-        cssClass: 'apexcharts-custom-class'
-      }
-    }
-  end
-
-  def positive_marker(x, y)
-    {
-      x: x,
-      y: y,
-      marker: {
-        size: 8,
-        fillColor: '#00FF00',
-        strokeColor: '#000000',
-        radius: 2,
-        cssClass: 'apexcharts-custom-class'
-      }
-    }
-  end
 
   def init_apexchart_from_rapidapi(data)
     @price_data = []
@@ -249,7 +175,12 @@ class SiteController < ApplicationController
     @pricing_by_date = {}
     @sentiment = {}
     @future_sentiment[:sentiment] = future_sentiment(data)
+
+    #@future_sentiment[:sentiment] = "test #{DateTime.now}" # this future sentiment statement"
     puts("@future_sentiment #{@future_sentiment}")
+
+    json_test = @future_sentiment.to_json
+    puts("json_test #{json_test}")
     point_index = 0
     data['stock_data'].each { |row|
       (price_data, volume_data) = aws_row_to_apexchart_row(row)
@@ -263,7 +194,7 @@ class SiteController < ApplicationController
       point_index += 1
     }
     puts("@pricing_by_date #{@pricing_by_date}")
-    (@points_data, @sentiment) = sentiment_points(data['Sentiment_dates'])
+    (@points_data, @sentiment) = sentiment_points(data['Sentiment_dates'], @pricing_by_date)
     puts("@points_data #{@points_data}")
     puts(" @sentiment #{@sentiment}")
   end
@@ -294,6 +225,7 @@ class SiteController < ApplicationController
     @points_data = []
     @sentiment = {}
     @future_sentiment = {}
+    @symbol = ''
   end
 
   def index
@@ -306,6 +238,7 @@ class SiteController < ApplicationController
     stock = analyze_params[:stock]
     @price_data = []
     @volume_data = []
+    @symbol = stock
 
     testing_aws_json = false
 

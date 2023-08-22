@@ -1,7 +1,4 @@
-// hello_controller.js
 import {Controller} from "@hotwired/stimulus"
-// import { Chart } from 'chart.js/auto';
-//import { ApexCharts } from 'apexcharts'
 import ApexCharts from 'apexcharts'
 window.ApexCharts = ApexCharts; // return apex chart
 
@@ -16,26 +13,39 @@ export default class extends Controller {
         points: String,
         future: String,
         sentiment: String,
+        symbol: String
     }
 
+    futureValueChanged() {
+        fetch(this.futureValue).then(
+            response => console.log("futureValueChanged: ",response)
+        )
+    }
     connect() {
         console.log("we are connected to chart controller")
         //console.log("prices:", this.pricesValue)
         this.price_data = JSON.parse(this.pricesValue)
         this.volume_data = JSON.parse(this.volumeValue)
         this.points_data = JSON.parse(this.pointsValue)
-        //this.future_sentiment = JSON.parse(this.futureValue)
-        //this.sentiment_data = JSON.parse(this.sentimentValue)
-        console.log("futureValue: ", this.futureValue)
-        console.log("sentimentValue: ", this.sentimentValue)
+        console.log("future:", this.futureValue)
+        console.log("symbol:", this.symbolValue)
+        this.future_sentiment = JSON.parse(this.futureValue)
+        //this.future_sentiment = this.futureValue
+        //this.future_sentiment = ""
+        this.sentiment_data = ""
+        console.log("sentiment: ", this.sentimentValue)
+        this.sentiment_data = JSON.parse(this.sentimentValue)
+        //console.log("futureValue: ", this.futureValue)
+        //console.log("sentimentValue: ", this.sentimentValue)
         console.log("price_data:", this.price_data)
         console.log("volume_data:", this.volume_data)
         console.log("points_data:", this.points_data)
-        //console.log("future_sentiment:", this.future_sentiment)
-        //console.log("sentiment_data:", this.sentiment_data)
+        console.log("future_sentiment:", this.future_sentiment['sentiment'])
+        console.log("sentiment_data:", this.sentiment_data)
+
         const sentiment = this.sentimentTarget
-        sentiment.className = "hidden"
-        sentiment.innerHTML = "" // "this is the sentiment" //this.sentimentValue
+        //sentiment.className = ""
+        sentiment.innerHTML = this.future_sentiment['sentiment'] || ''
 
         this.closing_prices = []
         this.price_dates = []
@@ -56,6 +66,19 @@ export default class extends Controller {
         return this.volume_data
     }
 
+    point_click_handler = (event, chartContext, config) => {
+        // The last parameter config contains additional information like `seriesIndex` and `dataPointIndex` for cartesian charts
+        console.log("click:", event, chartContext, config)
+        console.log("sentiment_data:", this.sentiment_data)
+        if (this.sentiment_data[config.dataPointIndex]) {
+            console.log("sentiment_data[config.dataPointIndex]:", this.sentiment_data[config.dataPointIndex])
+            const sentiment = this.sentimentTarget
+            //sentiment.className = ""
+            // Related_Data
+            sentiment.innerHTML = this.sentiment_data[config.dataPointIndex]
+        }
+
+    }
 
     price_linechart() {
 
@@ -69,23 +92,7 @@ export default class extends Controller {
                 type: 'line',
                 id: 'areachart-2',
                 events: {
-                    click: function (event, chartContext, config) {
-                        // The last parameter config contains additional information like `seriesIndex` and `dataPointIndex` for cartesian charts
-                        //console.log("click:", event, chartContext, config)
-                        console.log("click: config:", config)
-                    },
-                    dataPointSelection: function (event, chartContext, config) {
-                        //console.log("dataPointSelection: ", event, chartContext, config)
-                    },
-                    dataPointMouseEnter: function(event, chartContext, config) {
-                        //console.log("dataPointEnter: ", event, chartContext, config)
-                        // ...
-                    },
-                    dataPointMouseLeave: function(event, chartContext, config) {
-                        //console.log("dataPointLeave: ", event, chartContext, config)
-                        // ...
-                    }
-
+                    click: this.point_click_handler,
                 }
             },
             annotations: {
@@ -159,7 +166,7 @@ export default class extends Controller {
                 }
             },
             title: {
-                text: 'Line with Annotations',
+                text: `${this.symbolValue} Closing Price`,
                 align: 'left'
             },
             labels: this.price_dates,
