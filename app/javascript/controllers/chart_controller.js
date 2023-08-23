@@ -17,10 +17,11 @@ export default class extends Controller {
     }
 
     futureValueChanged() {
-        fetch(this.futureValue).then(
-            response => console.log("futureValueChanged: ",response)
-        )
+        //fetch(this.futureValue).then(
+        //    response => console.log("futureValueChanged: ",response)
+        //)
     }
+
     connect() {
         console.log("we are connected to chart controller")
         //console.log("prices:", this.pricesValue)
@@ -55,7 +56,7 @@ export default class extends Controller {
         })
         console.log("closing_prices:", this.closing_prices)
         console.log("price_dates:", this.price_dates)
-
+        this.show()
     }
 
     priceData() {
@@ -391,7 +392,10 @@ export default class extends Controller {
         //    `Stock ${this.stockTarget.value}!`
         //this.candlesWithVolume()
         //this.candlestick()
-        this.price_linechart()
+
+        if (this.closing_prices && (this.closing_prices.length > 0)) {
+            this.price_linechart()
+        }
         //this.linechart()
     }
 }
